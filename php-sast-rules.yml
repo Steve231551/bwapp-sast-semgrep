@@ -1,0 +1,162 @@
+rules:
+  - id: php-sql-injection
+    languages: [php]
+    severity: ERROR
+    mode: taint
+    message: "Posible inyeccion SQL (CWE-89): entrada del usuario llega a una consulta."
+    metadata: { owasp: "A03:2021 - Injection", cwe: "CWE-89", tipo: "SQL Injection" }
+    pattern-sources:
+      - pattern: $_GET
+      - pattern: $_POST
+      - pattern: $_REQUEST
+    pattern-sinks:
+      - pattern: mysql_query(...)
+      - pattern: mysqli_query(...)
+      - pattern: $O->query(...)
+
+  - id: php-command-injection
+    languages: [php]
+    severity: ERROR
+    mode: taint
+    message: "Posible inyeccion de comandos (CWE-78): entrada del usuario llega a un comando del sistema."
+    metadata: { owasp: "A03:2021 - Injection", cwe: "CWE-78", tipo: "Command Injection" }
+    pattern-sources:
+      - pattern: $_GET
+      - pattern: $_POST
+      - pattern: $_REQUEST
+    pattern-sinks:
+      - pattern: shell_exec(...)
+      - pattern: exec(...)
+      - pattern: system(...)
+      - pattern: passthru(...)
+      - pattern: popen(...)
+
+  - id: php-eval
+    languages: [php]
+    severity: ERROR
+    message: "Uso de eval() (CWE-95): ejecucion de codigo arbitrario."
+    metadata: { owasp: "A03:2021 - Injection", cwe: "CWE-95", tipo: "Code Injection" }
+    pattern: eval(...)
+
+  - id: php-xss-reflected
+    languages: [php]
+    severity: WARNING
+    mode: taint
+    message: "Posible XSS reflejado (CWE-79): entrada del usuario llega a la salida HTML."
+    metadata: { owasp: "A03:2021 - Injection", cwe: "CWE-79", tipo: "XSS" }
+    pattern-sources:
+      - pattern: $_GET
+      - pattern: $_POST
+      - pattern: $_REQUEST
+    pattern-sinks:
+      - pattern: echo ...;
+      - pattern: print(...)
+
+  - id: php-file-inclusion
+    languages: [php]
+    severity: ERROR
+    mode: taint
+    message: "Posible inclusion de archivos LFI/RFI (CWE-98)."
+    metadata: { owasp: "A03:2021 - Injection", cwe: "CWE-98", tipo: "File Inclusion" }
+    pattern-sources:
+      - pattern: $_GET
+      - pattern: $_POST
+      - pattern: $_REQUEST
+    pattern-sinks:
+      - pattern: include(...)
+      - pattern: include_once(...)
+      - pattern: require(...)
+      - pattern: require_once(...)
+
+  - id: php-ldap-injection
+    languages: [php]
+    severity: WARNING
+    mode: taint
+    message: "Posible inyeccion LDAP (CWE-90)."
+    metadata: { owasp: "A03:2021 - Injection", cwe: "CWE-90", tipo: "LDAP Injection" }
+    pattern-sources:
+      - pattern: $_GET
+      - pattern: $_POST
+      - pattern: $_REQUEST
+    pattern-sinks:
+      - pattern: ldap_search(...)
+      - pattern: ldap_list(...)
+
+  - id: php-mail-injection
+    languages: [php]
+    severity: WARNING
+    mode: taint
+    message: "Posible inyeccion en correo (CWE-93)."
+    metadata: { owasp: "A03:2021 - Injection", cwe: "CWE-93", tipo: "Mail Injection" }
+    pattern-sources:
+      - pattern: $_GET
+      - pattern: $_POST
+      - pattern: $_REQUEST
+    pattern-sinks:
+      - pattern: mail(...)
+
+  - id: php-open-redirect
+    languages: [php]
+    severity: WARNING
+    mode: taint
+    message: "Posible redireccion abierta (CWE-601)."
+    metadata: { owasp: "A01:2021 - Broken Access Control", cwe: "CWE-601", tipo: "Open Redirect" }
+    pattern-sources:
+      - pattern: $_GET
+      - pattern: $_POST
+      - pattern: $_REQUEST
+    pattern-sinks:
+      - pattern: header(...)
+
+  - id: php-weak-hash
+    languages: [php]
+    severity: WARNING
+    message: "Hash debil (MD5/SHA1) (CWE-328). Use password_hash()."
+    metadata: { owasp: "A02:2021 - Cryptographic Failures", cwe: "CWE-328", tipo: "Weak Hash" }
+    pattern-either:
+      - pattern: md5(...)
+      - pattern: sha1(...)
+
+  - id: php-weak-crypto
+    languages: [php]
+    severity: WARNING
+    message: "Criptografia debil o ofuscacion (CWE-327)."
+    metadata: { owasp: "A02:2021 - Cryptographic Failures", cwe: "CWE-327", tipo: "Weak Crypto" }
+    pattern-either:
+      - pattern: base64_encode(...)
+      - pattern: crypt(...)
+      - pattern: mcrypt_encrypt(...)
+
+  - id: php-unserialize
+    languages: [php]
+    severity: ERROR
+    message: "Deserializacion insegura (CWE-502)."
+    metadata: { owasp: "A08:2021 - Software and Data Integrity Failures", cwe: "CWE-502", tipo: "Deserialization" }
+    pattern: unserialize(...)
+
+  - id: php-extract
+    languages: [php]
+    severity: WARNING
+    message: "Uso de extract() sobre datos externos (CWE-621)."
+    metadata: { owasp: "A07:2021 - Identification and Authentication Failures", cwe: "CWE-621", tipo: "Variable Overwrite" }
+    pattern: extract(...)
+
+  - id: php-hardcoded-credentials
+    languages: [php]
+    severity: WARNING
+    message: "Credenciales embebidas en el codigo (CWE-798)."
+    metadata: { owasp: "A07:2021 - Identification and Authentication Failures", cwe: "CWE-798", tipo: "Hardcoded Credentials" }
+    patterns:
+      - pattern-either:
+          - pattern: $PASS = "...";
+          - pattern: $PASS = '...';
+      - metavariable-regex:
+          metavariable: $PASS
+          regex: '(?i).*(passw|pwd|secret).*'
+
+  - id: php-phpinfo
+    languages: [php]
+    severity: INFO
+    message: "phpinfo() expone informacion del servidor (CWE-200)."
+    metadata: { owasp: "A05:2021 - Security Misconfiguration", cwe: "CWE-200", tipo: "Information Disclosure" }
+    pattern: phpinfo(...)
